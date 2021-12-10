@@ -7,9 +7,27 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+	runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
+	runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
+	runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
+}
+
 javafx {
     version = "16"
     modules = [ 'javafx.controls' ]
 }
 
-mainClassName = 'HelloFX'
+
+mainClassName = 'hellofx.HelloFX'
+
+
+jar {
+    duplicatesStrategy=DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'hellofx.HelloFX'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
