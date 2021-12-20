@@ -1,52 +1,86 @@
 package hellofx;
 
 import javafx.application.Application;
-import javafx.application.ConditionalFeature;
-import javafx.application.Platform;
-import javafx.scene.Group;
-import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.shape.Box;
-import javafx.scene.shape.CullFace;
-import javafx.scene.transform.Rotate;
+import javafx.scene.control.Button;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.io.File;
+import java.util.Timer;
+import java.util.TimerTask;
+
 
 public class HelloFX extends Application {
 
+    MediaPlayer mediaPlayer;
+
     @Override
     public void start(Stage primaryStage) {
-        boolean is3DSupported = Platform.isSupported(ConditionalFeature.SCENE3D);
-        if(!is3DSupported) {
-            System.out.println("Sorry, 3D is not supported in JavaFX on this platform.");
-            return;
-        }
+        BorderPane root = new BorderPane();
 
-        Box box = new Box(100,100,100);
-        box.setCullFace(CullFace.NONE);
-        box.setTranslateX(250);
-        box.setTranslateY(100);
-        box.setTranslateZ(400);
+        HBox mainButton = new HBox();
 
-        boolean fixedEyeAtCameraZero = false;
-        PerspectiveCamera camera = new PerspectiveCamera(fixedEyeAtCameraZero);
-        camera.setTranslateX(150);
-        camera.setTranslateY(-100);
-        camera.setTranslateZ(250);
 
-        Group root = new Group(box);
-        root.setRotationAxis(Rotate.X_AXIS);
-        root.setRotate(30);
+        Button playButton = new Button("Play");
+        playButton.setOnAction(event -> {
+            if (mediaPlayer == null) {
+                String bip = "test.mp3";
+                Media hit = new Media(new File(bip).toURI().toString());
+                mediaPlayer = new MediaPlayer(hit);
+            }
+            mediaPlayer.play();
+        });
 
-        Scene scene = new Scene(root, 500, 300, true);
-        scene.setCamera(camera);
+        Button pauseButton = new Button("Pause");
+        pauseButton.setOnAction(event -> {
+            mediaPlayer.pause();
+        });
+
+        ScrollBar scrollBar = new ScrollBar();
+
+        scrollBar.setOnMouseClicked(event -> {
+            double value = scrollBar.getValue() / 100;
+            System.out.println(value);
+            Duration endTime = mediaPlayer.getStopTime();
+            mediaPlayer.seek(Duration.millis(value * endTime.toMillis()));
+
+        });
+
+        mainButton.getChildren().addAll(playButton, pauseButton);
+        root.setCenter(mainButton);
+        root.setBottom(scrollBar);
+
+        Scene scene = new Scene(root, 500, 300);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("3D Example");
-
+        primaryStage.setTitle("MusicPlayer");
         primaryStage.show();
+
+        new Timer().schedule(
+                new TimerTask() {
+
+                    @Override
+                    public void run() {
+                        if (mediaPlayer != null){
+                            Duration currentTime = mediaPlayer.getCurrentTime();
+                            Duration endTime = mediaPlayer.getStopTime();
+                            double progress = currentTime.toMillis() / endTime.toMillis();
+                            scrollBar.setValue(progress * 100);
+
+                        }
+                    }
+                }, 0, 500
+        );
     }
 
     public static void main(String[] args) {
         launch();
     }
+
 
 }
